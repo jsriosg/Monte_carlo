@@ -39,10 +39,37 @@ void SpinSystem::UnPasoDeMetropolis(double Beta, Crandom & Ran64){
   }
 }
 
+const int teq=(int)(600*std::pow(L/8.0,2.125));
+const int tcorr=(int)(50*std::pow(L/8.0,2.125));
+const int Nmuestras=10000;
+
 int main(){
   SpinSystem Ising;
-  int t;
-  Ising.InicieTodosAbajo();
+  Crandom Ran64(2605);
+  double kT, Beta;
+  int mcs,mcss;
+  double E, M, sumM, sumM2, sumM4, sumE, sumE2;
+  kT=2.2; //para cada T
+  Beta=1.0/kT;
+  Ising.InicieTodosAbajo(); //inicio sistema
+  for(mcss=0;mcss<teq;mcss++){
+    for(mcs=0;mcs<L2;mcs++){//1 mcs(monte carlo step)
+      Ising.UnPasoDeMetropolis(Beta,Ran64);//llegar al equilibrio
+    }
+  }
+  //tomar muestras
+  sumM=sumM2=sumM4=sumE=sumE2=0; //inicio acumuladores en cero
+  int cmuestras;
+  for(cmuestras=0;cmuestras<Nmuestras;cmuestras++){
+    E=Ising.GetE(); M=Ising.GetM();//tomo muestras
+    sumM+=M; sumM2+=M*M; sumM4+=M*M*M*M; sumE+=E;sumE2+=E*E;
+    //avanzar hasta la siguiente muestra
+    for(mcss=0;mcss<tcorr;mcss++){
+      for(mcs=0;mcs<L2;mcs++){//1 mcs(monte carlo step)
+	Ising.UnPasoDeMetropolis(Beta,Ran64);//llegar al equilibrio
+      }
+    }
+  }
   std::cout<<"E="<<Ising.GetE()<<" , M="<<Ising.GetM()<<endl;
   return 0;
 }
